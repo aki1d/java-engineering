@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Every exclusion here is deliberate and explained. Do not add blanket exclusions.
+-->
+<FindBugsFilter>
+  <!--
+    EI_EXPOSE_REP / EI_EXPOSE_REP2: flagged for any constructor or getter that touches a mutable
+    reference. The types involved here are either immutable (List.copyOf results, records holding
+    unmodifiable collections) or collaborators that are shared on purpose (executors, factories,
+    callbacks). Defensive copies of those would be wrong, not safer.
+  -->
+  <Match>
+    <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+  </Match>
+  <!--
+    THROWS_METHOD_THROWS_RUNTIMEEXCEPTION: fires whenever a method rethrows a RuntimeException,
+    including the deliberate pattern of unwrapping ExecutionException causes and of releasing a
+    permit before rethrowing.
+  -->
+  <Match>
+    <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+  </Match>
+  <!--
+    ResourceFactory.create() declares "throws Exception" on purpose, like Callable.call():
+    factories wrap arbitrary resources whose constructors throw arbitrary checked exceptions.
+  -->
+  <Match>
+    <Class name="io.github.aki1d.javaengineering.pool.ResourceFactory"/>
+    <Bug pattern="THROWS_METHOD_THROWS_CLAUSE_BASIC_EXCEPTION"/>
+  </Match>
+  <!--
+    False positive: drainTo uses the standard lock(); try { ... } finally { unlock(); } idiom.
+    The detector loses track of the lock across the loop that calls dequeue().
+  -->
+  <Match>
+    <Class name="io.github.aki1d.javaengineering.concurrent.BoundedBlockingQueue"/>
+    <Method name="drainTo"/>
+    <Bug pattern="CWO_CLOSED_WITHOUT_OPENED"/>
+  </Match>
+  <!-- Test code: assertions on concurrently-mutated state and deliberately ignored return values. -->
+  <Match>
+    <Class name="~.*Test(\$.*)?"/>
+  </Match>
+</FindBugsFilter>
