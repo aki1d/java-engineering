@@ -22,6 +22,7 @@
 
   <modules>
     <module>core</module>
+    <module>benchmarks</module>
   </modules>
 
   <properties>
