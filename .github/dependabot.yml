@@ -1,0 +1,15 @@
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      test-dependencies:
+        patterns: ["org.junit*", "org.assertj*", "org.mockito*"]
+      build-plugins:
+        patterns: ["*plugin*", "com.puppycrawl.tools*", "com.diffplug*"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

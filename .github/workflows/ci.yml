@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, test and analyse
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Check formatting
+        run: ./mvnw -B -ntp spotless:check
+
+      - name: Build, test, Checkstyle, SpotBugs and coverage gate
+        run: ./mvnw -B -ntp verify
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: jacoco-report
+          path: core/target/site/jacoco/
+          if-no-files-found: ignore
+
+      - name: Smoke-test the benchmark jar
+        # A single short iteration proves the JMH harness is wired up; it is not a measurement.
+        run: java -jar benchmarks/target/benchmarks.jar TopKBenchmark -p k=10 -f 1 -wi 0 -i 1 -r 1s
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/dependency-review-action@v5
+        with:
+          fail-on-severity: high
