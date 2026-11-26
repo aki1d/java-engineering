@@ -15,9 +15,10 @@ import java.util.function.Consumer;
  * Groups items submitted by many producer threads into batches handled by one consumer thread.
  *
  * <p>A batch is flushed when it reaches {@code maxBatchSize} or when {@code maxLinger} has passed
- * since its first item arrived, whichever comes first. This is the trade-off behind Kafka's {@code
- * batch.size}/{@code linger.ms}: larger batches amortise per-call overhead (one SQL insert or one
- * HTTP call per batch), and the linger bound caps the latency an item can wait for its batch.
+ * since its first item was taken from the queue, whichever comes first. This is the trade-off
+ * behind Kafka's {@code batch.size}/{@code linger.ms}: larger batches amortise per-call overhead
+ * (one SQL insert or one HTTP call per batch), and the linger bound caps the latency an item can
+ * wait for its batch.
  *
  * <p>The queue between producers and the consumer is bounded, so a slow consumer applies
  * backpressure: {@link #submit} waits for space and gives up after its timeout instead of letting
